@@ -7,6 +7,8 @@ TST_FLAG		::=		$(shell pkg-config --cflags --libs check)
 COV_FLAGS		::=		-fprofile-arcs -ftest-coverage
 REL_FLAG		::=		-DNDEBUG -O2
 
+INCLUDE			=		$(addprefix -I, $(INCLUDE_DIR))
+
 # =============================================================================
 # Build Mode Configuration using MAKECMDGOALS
 # =============================================================================
@@ -32,8 +34,7 @@ endif
 # =============================================================================
 # Directory Structure
 # =============================================================================
-INCLUDE_DIR		::=		./include
-INCLUDE			::=		$(addprefix -I, $(INCLUDE_DIR))
+INCLUDE_DIR		::=		./brick_game/tetris/include
 
 BUILD			::=		./build
 BUILD.obj		::=		./build/obj
@@ -69,31 +70,32 @@ all: $(MAINAPP)
 # =============================================================================
 $(MAINAPP): $(OBJ.tetris) $(OBJ.cli)
 	$(info Linking and running the $@ app...)
-	@$(CC) $(CFLAGS) $^ -o $@
+	@$(CC) $(CFLAGS) $(INCLUDE) $^ -o $@
 	@ln -s $@ ./tetris
 	@$@
 
 $(OBJD.tetris)/%.o: $(SRC.tetris)/%.c | $(OBJD.tetris)
 	$(info Compiing the $@ file...)
-	@$(CC) $(CFLAGS) -c $< -o $@
+	@$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
 
 $(OBJD.cli)/%.o: $(SRC.cli)/%.c | $(OBJD.cli)
 	$(info Compiing the $@ file...)
-	@$(CC) $(CFLAGS) -c $< -o $@
+	@$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
 
 # =============================================================================
 # Testing Rules
 # =============================================================================
 test: $(TESTAPP)
 
+# possible run direct suite with CK_RUN_SUITE env
 $(TESTAPP): $(OBJ.tests) $(OBJ.tetris) $(OBJ.cli)
 	$(info Compile tests and running with valgrind...)
-	@$(CC) $(CFLAGS) $^ $(TST_FLAG) -o $@
+	@$(CC) $(CFLAGS) $(INCLUDE) $^ $(TST_FLAG) -o $@
 	@CK_FORK=no valgrind --tool=memcheck --leak-check=full --track-origins=yes $@
 
 $(OBJD.tests)/%.o: $(SRC.tests)/%.c | $(OBJD.tests)
 	$(info Building the $@ object file...)
-	@$(CC) $(CFLAGS) -c $< $(TST_FLAG) -o $@
+	@$(CC) $(CFLAGS) $(INCLUDE) -c $< $(TST_FLAG) -o $@
 
 # =============================================================================
 # Assemble Coverage Data to Web-Page
