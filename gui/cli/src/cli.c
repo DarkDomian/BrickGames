@@ -1,9 +1,18 @@
-// including header file with API for the libgame
-// including cli-headers
+#include "cli.h"
 
-// here is main() function
 int main(void) {
-    // initialize ncurses
+  // initialize ncurses
+  initscr();    // Start curses mode
+  raw();        // suspend, interrupt and quit char goes direct to the program
+  noecho();     // block printing the user input
+  keypad(stdscr, TRUE); // enable hande the F1..F12, arrows, etc.
 
-    // game loop
+  WINDOW *new_window;
+
+  printw("Hello World !!!");	/* Print Hello World		  */
+  refresh();			/* Print it on to the real screen */
+  getch();			/* Wait for user input */
+  endwin();			/* End curses mode		  */
+
+  return 0;
 }

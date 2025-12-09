@@ -39,10 +39,12 @@ INCLUDE_DIR		::=		./brick_game/tetris/include
 BUILD			::=		./build
 BUILD.obj		::=		./build/obj
 BUILD.cov		::=		./build/coverage
+BUILD.bin		::=		./build/bin
+BUILD.lib		::=		./build/lib
 
 SRC.tetris		::=		./brick_game/tetris
-SRC.cli			::=		./gui/cli
-SRC.tests		::=		./tests
+SRC.cli			::=		./gui/cli/src
+SRC.tests		::=		./brick_game/tetris/tests
 
 OBJD.tetris		::=		$(BUILD.obj)/tetris
 OBJD.cli		::=		$(BUILD.obj)/cli
