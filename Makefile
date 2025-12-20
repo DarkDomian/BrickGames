@@ -42,7 +42,7 @@ BUILD.cov		::=		./build/coverage
 BUILD.bin		::=		./build/bin
 BUILD.lib		::=		./build/lib
 
-SRC.tetris		::=		./brick_game/tetris
+SRC.tetris		::=		./brick_game/tetris/src
 SRC.cli			::=		./gui/cli/src
 SRC.tests		::=		./brick_game/tetris/tests
 
@@ -53,28 +53,38 @@ OBJD.tests		::=		$(BUILD.obj)/tests
 # =============================================================================
 # Source and Object Files
 # =============================================================================
-OBJ.tetris		=		$(patsubst $(SRC.tetris)/%.c, $(OBJD.tetris)/%.o, $(wildcard $(SRC.tetris)))
-OBJ.cli			=		$(patsubst $(SRC.cli)/%.c, $(OBJD.cli)/%.o, $(wildcard $(SRC.cli)))
-OBJ.tests		=		$(patsubst $(SRC.tests)/%.c, $(OBJD.tests)/%.o, $(wildcard $(SRC.tests)))
+OBJ.tetris		=		$(patsubst $(SRC.tetris)/%.c, $(OBJD.tetris)/%.o, $(wildcard $(SRC.tetris)/*.c))
+OBJ.cli			=		$(patsubst $(SRC.cli)/%.c, $(OBJD.cli)/%.o, $(wildcard $(SRC.cli)/*.c))
+OBJ.tests		=		$(patsubst $(SRC.tests)/%.c, $(OBJD.tests)/%.o, $(wildcard $(SRC.tests)/*.c))
 
 # =============================================================================
 # Main Targets
 # =============================================================================
-MAINAPP			::=		./build/tetris
-TESTAPP			::=		./build/test
+LIB.tetris			::=		$(BUILD.lib)/libtetris.a
+
+BIN.cli				::=		$(BUILD.bin)/cli.o
+
+APP.tetris_cli		::=		./build/tetris_cli
+
+TEST.tetris			::=		./build/tetris_test
 
 .PHONY: all debug release style_format style_check gcov_report clean rebuild
 
-all: $(MAINAPP)
+all: $(APP.tetris_cli)
 
 # =============================================================================
 # Build Rules
 # =============================================================================
-$(MAINAPP): $(OBJ.tetris) $(OBJ.cli)
+$(APP.tetris_cli): $(LIB.tetris) $(OBJ.cli)
 	$(info Linking and running the $@ app...)
-	@$(CC) $(CFLAGS) $(INCLUDE) $^ -o $@
+	@$(CC) $(CFLAGS) $(INCLUDE) -L./$(BUILD.lib) $(OBJ.cli) -ltetris -lncurses -o $@
 	@ln -s $@ ./tetris
 	@$@
+
+$(LIB.tetris): $(OBJ.tetris) | $(BUILD.lib)
+	$(info Create BrickGame library $@...)
+	@ar rcs $@ $^
+	@ranlib $@
 
 $(OBJD.tetris)/%.o: $(SRC.tetris)/%.c | $(OBJD.tetris)
 	$(info Compiing the $@ file...)
@@ -87,10 +97,10 @@ $(OBJD.cli)/%.o: $(SRC.cli)/%.c | $(OBJD.cli)
 # =============================================================================
 # Testing Rules
 # =============================================================================
-test: $(TESTAPP)
+test: $(TEST.tetris)
 
 # possible run direct suite with CK_RUN_SUITE env
-$(TESTAPP): $(OBJ.tests) $(OBJ.tetris) $(OBJ.cli)
+$(TEST.tetris): $(OBJ.tests) $(OBJ.tetris) $(OBJ.cli)
 	$(info Compile tests and running with valgrind...)
 	@$(CC) $(CFLAGS) $(INCLUDE) $^ $(TST_FLAG) -o $@
 	@CK_FORK=no valgrind --tool=memcheck --leak-check=full --track-origins=yes $@
@@ -113,7 +123,7 @@ gcov_report: test | $(BUILD.cov)
 # =============================================================================
 style_format:
 	$(info Formatting code with clang-format...)
-	@clang-format -i --verbose --style="{BasedOnStyle: Google}" ./*/*.[h,c]
+	@find . -name "*.h" -o -name "*.c" | xargs clang-format -i --verbose --style="{BasedOnStyle: Google}"
 
 style_check:
 	$(info Checking style with clang-format and cppcheck...)
@@ -135,19 +145,23 @@ rebuild: clean all
 # =============================================================================
 $(OBJD.tetris):
 	$(info Prepairing the $@ for work...)
-	@mkdir -p $(OBJD.tetris)
+	@mkdir -p $@
 
 $(OBJD.cli):
 	$(info Prepairing the $@ for work...)
-	@mkdir -p $(OBJD.cli)
+	@mkdir -p $@
 
 $(OBJD.tests):
 	$(info Prepairing the $@ for work...)
-	@mkdir -p $(OBJD.tests)
+	@mkdir -p $@
 
 $(BUILD.cov):
 	$(info Prepairing the $@ for work...)
-	@mkdir -p $(OBJD.tests)
+	@mkdir -p $@
+
+$(BUILD.lib):
+	$(info Preparing the $@ for work...)
+	@mkdir -p $@
 
 
 .PHONY: all install uninstall clean dvi dist test gcov_report help
