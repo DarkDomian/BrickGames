@@ -1,17 +1,13 @@
 #include "cli.h"
 
 int main(void) {
-  BrickUI ui = {
-    .game_field = NULL,
-    .info_bar = NULL,
-    .next_field = NULL
-  };
+  BrickUI ui = {.game_field = NULL, .info_bar = NULL, .next_field = NULL};
 
   if (BrickGameInit(TICK_DELAY, &ui) == ERROR) {
     fprintf(stderr, "Faild to initialize ncurses mode...");
     return ERROR;
   }
-  
+
   DrawUI(&ui);
 
   GameLoop(&ui);
@@ -21,16 +17,17 @@ int main(void) {
 
 int BrickGameInit(const int delay, BrickUI *ui) {
   if (initscr() == NULL) return ERROR;
-  
+
   noecho();
   curs_set(0);
 
   raw();
-  
-  ui->game_field = newwin(PLAY_FIELD_HEIGHT + 2, PLAY_FIELD_WIDTH * 2 + 2, 0, 0);
+
+  ui->game_field =
+      newwin(PLAY_FIELD_HEIGHT + 2, PLAY_FIELD_WIDTH * 2 + 2, 0, 0);
   ui->info_bar = newwin(PLAY_FIELD_HEIGHT + 2, 12, 0, PLAY_FIELD_WIDTH * 2 + 2);
   ui->next_field = derwin(ui->info_bar, 4, 8, 11, 2);
-  
+
   keypad(ui->game_field, TRUE);
   wtimeout(ui->game_field, delay);
 
@@ -57,10 +54,12 @@ void DrawUI(BrickUI *ui) {
   wrefresh(ui->info_bar);
 }
 
-void PrintMatrix(WINDOW *screen, int **matrix, int row, int col, int shift_row, int shift_col) {
+void PrintMatrix(WINDOW *screen, int **matrix, int row, int col, int shift_row,
+                 int shift_col) {
   if (matrix == NULL) return;
+  // wclear(screen);
 
-  for (int y = 0; y < row; ++y){
+  for (int y = 0; y < row; ++y) {
     for (int x = 0; x < col; ++x) {
       if (matrix[y][x])
         mvwaddnstr(screen, y + shift_row, x * 2 + shift_col, FILLED_PIXEL, 2);
@@ -102,15 +101,15 @@ void GameLoop(BrickUI *ui) {
   UserAction_t act = Start;
 
   GameInfo_t game_state;
-  while (1) { 
-    if ((curr_ch = wgetch(ui->game_field)) != ERR) {      
+  while (1) {
+    if ((curr_ch = wgetch(ui->game_field)) != ERR) {
       act = CharToAction(curr_ch);
       userInput(act, (prev_ch == curr_ch) ? true : false);
     }
 
     if (act == Terminate) break;
     prev_ch = curr_ch;
-    
+
     // some function for update UI
     game_state = updateCurrentState();
     PrintMatrix(ui->game_field, game_state.field, 20, 10, 1, 1);
