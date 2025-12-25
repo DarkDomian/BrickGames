@@ -1,49 +1,38 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include "tetris_lib.h"
-#include "tetromino.h"
 #include "fsm.h"
-
-typedef struct {
-  Signals_t action;
-  bool hold;
-  bool fresh;
-} UserInput_t;
+#include "tetris_lib.h"
+// #include "tetris_internal.h"
+#include "tetromino.h"
 
 static int** AllocMatrix(int row, int cal);
+static bool InitializeGameState(CoreGameState_t *game);
+static GameInfo_t CoreToPublic(CoreGameState_t *core);
 
-// "gloval" variable
-static GameInfo_t game_snapshot;
-static UserInput_t usr_input;
+static UserInput_t user_input = {NOSIG, false, false};
 
-
-// possible to translate from UserAction_t to Signals (for example)
 void userInput(UserAction_t action, bool hold) {
-  usr_input.action = (Signals_t)action;
-  usr_input.hold = hold;
-  usr_input.fresh = true;
+  user_input.action = (Signals_t) action;
+  user_input.hold = hold;
+  user_input.fresh = true;
 }
 
 GameInfo_t updateCurrentState() {
-  static bool first_call = true;
-  static TetrisState_t current_state = START;
+  static CoreGameState_t game;
+  
+  static bool initialized = false;
+  if (!initialized) 
+    initialized = InitializeGameState(&game);
 
-  // initialize on first call
-  if (first_call) {
-    game_snapshot.field = AllocMatrix(20, 10);
-    game_snapshot.next = AllocMatrix(4, 4);
-    first_call = false;
-  }
+  SigAct(&game);
 
-  SigAct(usr_input.fresh ? usr_input.action : NOSIG, &game_snapshot, &current_state);
-  usr_input.fresh = false;
-
-  return game_snapshot;
+  return CoreToPublic(&game);
 }
 
-
-// other functions
+// ========================================================
+// Auxiliary Functions
+// ========================================================
 static int** AllocMatrix(int row, int cal) {
   int** entery = malloc(row * cal * sizeof(int) + row * sizeof(int*));
 
@@ -55,4 +44,35 @@ static int** AllocMatrix(int row, int cal) {
     for (int x = 0; x < cal; ++x) entery[y][x] = 0;
 
   return entery;
+}
+
+static bool InitializeGameState(CoreGameState_t *game) {
+  game->field = AllocMatrix(20, 10);
+  game->next = AllocMatrix(4, 4);
+
+  game->usr_input = &user_input;
+
+  #if 1 // TODO: add initialization for high_score
+  FILE* file = fopen("./tetris_data.bin", "r");
+  if (file) {
+    fscanf(file, "%d", &(game->info.high_score));
+    fclose(file);
+  }
+  #endif
+
+  return true;
+}
+
+static GameInfo_t CoreToPublic(CoreGameState_t *core) {
+  GameInfo_t public = {
+    .field = core->field,
+    .next = core->next,
+    .score = core->info.score,
+    .high_score = core->info.high_score,
+    .level = core->info.level,
+    .pause = core->info.pause,
+    .speed = core->info.speed
+  };
+
+  return public;
 }

@@ -1,6 +1,7 @@
 #ifndef TETROMINO_H
 #define TETROMINO_H
 
+#include <stdbool.h>
 #include <stdlib.h>
 #include <time.h>
 
@@ -23,7 +24,7 @@ typedef struct {
   int color;
 } Tetromino;
 
-extern const Tetromino SHAPES[NUMBER_OF_TETROMINO];
+extern const Tetromino kTetrShape[NUMBER_OF_TETROMINO];
 
 Tetromino_t GetNextPiece(void);
 

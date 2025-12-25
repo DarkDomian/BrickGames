@@ -2,7 +2,7 @@
 
 static void FisherYatesShuffle(Tetromino_t *bag, int size);
 
-const Tetromino SHAPES[NUMBER_OF_TETROMINO] = {
+const Tetromino kTetrShape[NUMBER_OF_TETROMINO] = {
     {SHAPE_I, {{0, 0, 0, 0}, {1, 1, 1, 1}, {0, 0, 0, 0}, {0, 0, 0, 0}}, 4, 1},
     {SHAPE_O, {{1, 1, 0, 0}, {1, 1, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}, 2, 2},
     {SHAPE_T, {{0, 1, 0, 0}, {1, 1, 1, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}, 3, 3},
@@ -27,10 +27,10 @@ Tetromino_t GetNextPiece() {
 
 // Fisher–Yates shuffle Algorithm
 static void FisherYatesShuffle(Tetromino_t *bag, int size) {
-  static int initialize = 0;
+  static bool initialize = false;
   if (!initialize) {
     srand(time(NULL));
-    initialize = 1;
+    initialize = true;
   }
 
   for (int i = size - 1; i > 0; --i) {
